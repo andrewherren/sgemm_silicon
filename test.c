@@ -58,7 +58,9 @@ int main() {
         printf("Exec. time = %.3fms\n", exec_time * 1000);
         printf("GFLOPS = %.3f\n", FLOPS / 1e9);
 
-        validate_mat(C, C_ref, M * N, 1e-4);
+        struct val_stat_t val_results = validate_mat(C, C_ref, M * N, 1e-4);
+
+        printf("Number of mismatches = %d\n", val_results.n_error);
     }
 
     _mm_free(A);
