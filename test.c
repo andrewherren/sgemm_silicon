@@ -59,8 +59,12 @@ int main() {
         printf("GFLOPS = %.3f\n", FLOPS / 1e9);
 
         struct val_stat_t val_results = validate_mat(C, C_ref, M * N, 1e-4);
-
         printf("Number of mismatches = %d\n", val_results.n_error);
+
+        // for (int j = 0; j < 20; j++) {
+        //     printf("C[%d,%d] = %.3f\n", j, j, *(C + j * M + j));
+        //     printf("C_ref[%d,%d] = %.3f\n", j, j, *(C_ref + j * M + j));
+        // }
     }
 
     _mm_free(A);
