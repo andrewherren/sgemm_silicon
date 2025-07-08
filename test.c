@@ -49,7 +49,7 @@ int main() {
     
     for (int i = 0; i < NITER; i++) {
         start = timer();
-        matmul(A, B, C, M, N, K);
+        matmul_basic_kernel(A, B, C, M, N, K);
         end = timer();
 
         exec_time = (end - start) * 1e-9;
@@ -61,9 +61,13 @@ int main() {
         struct val_stat_t val_results = validate_mat(C, C_ref, M * N, 1e-4);
         printf("Number of mismatches = %d\n", val_results.n_error);
 
-        // for (int j = 0; j < 20; j++) {
-        //     printf("C[%d,%d] = %.3f\n", j, j, *(C + j * M + j));
-        //     printf("C_ref[%d,%d] = %.3f\n", j, j, *(C_ref + j * M + j));
+        // if (i == NITER - 1) {
+        //     for (int j = 0; j < 5; j++) {
+        //         for (int k = 0; k < 5; k++) {
+        //             printf("C[%d,%d] = %.3f\n", j, k, *(C + k * M + j));
+        //             printf("C_ref[%d,%d] = %.3f\n", j, k, *(C_ref + k * M + j));
+        //         }
+        //     }
         // }
     }
 

@@ -60,11 +60,7 @@ void pack_blockA(float* A, float* blockA_packed, int mc, int kc, int M) {
     }
 }
 
-void matmul(float* A, float* B, float* C, int M, int N, int K) {
-
-    // The function computes C[M x N] = A[M x K] @ B[K x N]
-    // All operands are stored in column-major format, with lda=M, ldb=K, ldc=M
-
+void matmul_blocked_kernel(float* A, float* B, float* C, int M, int N, int K) {
     for (int j = 0; j < N; j += NC) {
         int nc = min(NC, N - j);
         int kc = min(KC, K);
@@ -108,6 +104,17 @@ void matmul(float* A, float* B, float* C, int M, int N, int K) {
                     }
                 }
             }
+        }
+    }
+}
+
+void matmul_basic_kernel(float* A, float* B, float* C, int M, int N, int K) {
+PRAGMA_OMP_PARALLEL_FOR
+    for (int i = 0; i < M; i += KERNEL_DIM_1) {
+        for (int j = 0; j < N; j += KERNEL_DIM_2) {
+            int kernel_dim_1 = min(KERNEL_DIM_1, M - i);
+            int kernel_dim_2 = min(KERNEL_DIM_2, N - j);
+            kernel_12x3_no_blocking(&A[i], &B[j * K], &C[j * M + i], M, N, K, kernel_dim_1, kernel_dim_2);
         }
     }
 }

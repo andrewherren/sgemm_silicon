@@ -14,4 +14,13 @@ void kernel_12x3(float* blockA_packed,
                  int nr,
                  int kc);
 
+void kernel_12x3_no_blocking(float* A_tilde,
+                             float* B_tilde,
+                             float* C_tilde,
+                             int M,
+                             int N,
+                             int K, 
+                             int kernel_dim_1, 
+                             int kernel_dim_2);
+
 #endif // KERNEL_H_

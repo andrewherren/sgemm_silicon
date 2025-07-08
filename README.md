@@ -34,8 +34,9 @@ With cmake (and ideally openMP) installed, you can build the CPU-based program m
 ```
 rm -rf build
 mkdir build
-cmake -S . -B build
+cmake -S . -B build -DNTHREADS=k
 cmake --build build
 ```
 
-from the project directory at the command line. Then you can run the program with `./build/sgemm_silicon_cpu`.
+from the project directory at the command line (replace `k` with the number of threads you intend to use). 
+Then you can run the program with `./build/sgemm_silicon_cpu`.
