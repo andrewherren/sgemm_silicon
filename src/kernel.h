@@ -50,4 +50,38 @@ void kernel_blocked(float* panelA_packed,
                     int ir,
                     int jr);
 
+void kernel_blocked_unrolled(float* panelA_packed,
+                             float* panelB_packed,
+                             float* C,
+                             int M,
+                             int N,
+                             int K,
+                             int mc,
+                             int nc,
+                             int kc,
+                             int mr,
+                             int nr,
+                             int ic,
+                             int jc,
+                             int pc,
+                             int ir,
+                             int jr);
+
+void kernel_blocked_simd(float* panelA_packed,
+                         float* panelB_packed,
+                         float* C,
+                         int M,
+                         int N,
+                         int K,
+                         int mc,
+                         int nc,
+                         int kc,
+                         int mr,
+                         int nr,
+                         int ic,
+                         int jc,
+                         int pc,
+                         int ir,
+                         int jr);
+
 #endif // KERNEL_H_

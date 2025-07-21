@@ -34,6 +34,8 @@ int main() {
     float* A = (float*)_mm_malloc(M * K * sizeof(float), MEM_ALIGN);
     float* B = (float*)_mm_malloc(K * N * sizeof(float), MEM_ALIGN);
     float* C = (float*)_mm_malloc(M * N * sizeof(float), MEM_ALIGN);
+    float* C_unrolled = (float*)_mm_malloc(M * N * sizeof(float), MEM_ALIGN);
+    float* C_simd = (float*)_mm_malloc(M * N * sizeof(float), MEM_ALIGN);
     float* C_accel = (float*)_mm_malloc(M * N * sizeof(float), MEM_ALIGN);
     float* C_eigen = (float*)_mm_malloc(M * N * sizeof(float), MEM_ALIGN);
     float* C_ref = (float*)_mm_malloc(M * N * sizeof(float), MEM_ALIGN);
@@ -73,11 +75,39 @@ int main() {
         exec_time = (end - start) * 1e-9;
         FLOPS = FLOP / exec_time;
 
-        printf("Exec. time (custom) = %.3fms\n", exec_time * 1000);
-        printf("GFLOPS (custom) = %.3f\n", FLOPS / 1e9);
+        printf("Exec. time (blocked, not unrolled) = %.3fms\n", exec_time * 1000);
+        printf("GFLOPS (blocked, not unrolled) = %.3f\n", FLOPS / 1e9);
 
         struct val_stat_t val_results = validate_mat(C, C_ref, M * N, 1e-4);
-        printf("Number of mismatches (custom) = %d\n", val_results.n_error);
+        printf("Number of mismatches (blocked, not unrolled) = %d\n", val_results.n_error);
+        
+        init_const(C_unrolled, 0.0, M*N);
+        start = timer();
+        matmul_blocked_kernel_unrolled(A, B, C_unrolled, M, N, K);
+        end = timer();
+
+        exec_time = (end - start) * 1e-9;
+        FLOPS = FLOP / exec_time;
+
+        printf("Exec. time (blocked, unrolled) = %.3fms\n", exec_time * 1000);
+        printf("GFLOPS (blocked, unrolled) = %.3f\n", FLOPS / 1e9);
+
+        val_results = validate_mat(C_unrolled, C_ref, M * N, 1e-4);
+        printf("Number of mismatches (blocked, unrolled) = %d\n", val_results.n_error);
+        
+        init_const(C_simd, 0.0, M*N);
+        start = timer();
+        matmul_blocked_kernel_simd(A, B, C_simd, M, N, K);
+        end = timer();
+
+        exec_time = (end - start) * 1e-9;
+        FLOPS = FLOP / exec_time;
+
+        printf("Exec. time (blocked, unrolled, SIMD) = %.3fms\n", exec_time * 1000);
+        printf("GFLOPS (blocked, unrolled, SIMD) = %.3f\n", FLOPS / 1e9);
+
+        val_results = validate_mat(C_simd, C_ref, M * N, 1e-4);
+        printf("Number of mismatches (blocked, unrolled, SIMD) = %d\n", val_results.n_error);
 
         #ifdef EIGEN_ON
         
@@ -109,14 +139,14 @@ int main() {
         val_results = validate_mat(C_accel, C_ref, M * N, 1e-4);
         printf("Number of mismatches (accelerate) = %d\n", val_results.n_error);
 
-//        if (i == NITER - 1) {
-//            for (int j = 0; j < 5; j++) {
-//                for (int k = 0; k < 5; k++) {
-//                    printf("C[%d,%d] = %.3f\n", j, k, *(C + k * M + j));
-//                    printf("C_ref[%d,%d] = %.3f\n", j, k, *(C_ref + k * M + j));
-//                }
-//            }
-//        }
+       if (i == NITER - 1) {
+           for (int j = 0; j < 5; j++) {
+               for (int k = 0; k < 5; k++) {
+                   printf("C_simd[%d,%d] = %.3f\n", j, k, *(C_simd + k * M + j));
+                   printf("C_ref[%d,%d] = %.3f\n", j, k, *(C_ref + k * M + j));
+               }
+           }
+       }
     }
 
     _mm_free(A);
