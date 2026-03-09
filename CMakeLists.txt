@@ -1,13 +1,16 @@
 # Project definition
 cmake_minimum_required(VERSION 3.20)
 project(sgemm_silicon LANGUAGES C CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Build options
 option(OPENMP_FLAG "Use openMP" OFF)
 option(DEBUG_FLAG "Compile with debug symbols and no optimization" OFF)
 option(ASAN_FLAG "Address sanitizer" OFF)
 option(UNITTEST_FLAG "C++ unit tests" OFF)
-option(EIGEN_FLAG "C++ unit tests" OFF)
+option(EIGEN_FLAG "Compare to Eigen matmul" OFF)
+option(MLX_FLAG "Compare to MLX matmul" OFF)
 
 # Optional address sanitizer compiler flags
 if(ASAN_FLAG)
@@ -74,6 +77,22 @@ find_library( FRAMEWORK_ACCELERATE
   NO_DEFAULT_PATH
 )
 
+# MLX-based extension
+if(MLX_FLAG)
+  add_definitions(-DMLX_ON)
+  find_library(ACCELERATE_LIBRARY Accelerate)
+  if(ACCELERATE_LIBRARY)
+    message(STATUS "Accelerate found ${ACCELERATE_LIBRARY}")
+  else()
+    message(FATAL_ERROR "Accelerate or arm neon not found")
+  endif()
+
+  add_library(matmul_mlx STATIC src/mlx_extension.cpp)
+  target_link_libraries(matmul_mlx PUBLIC ${ACCELERATE_LIBRARY})
+  target_include_directories(matmul_mlx PRIVATE ${SOURCE_HEADER_DIR})
+  set_target_properties(matmul_mlx PROPERTIES LINKER_LANGUAGE CXX)
+endif()
+
 # C library defined in src/ folder
 include_directories("${SOURCE_HEADER_DIR}")
 add_library(matmul src/matmul.c src/utils.c src/kernel.c)
@@ -106,11 +125,14 @@ endif()
 
 # Main executable
 add_executable(sgemm_silicon_cpu test.c)
+set(SGEMM_LIBRARIES matmul ${MATMUL_LIBS} ${FRAMEWORK_ACCELERATE})
 if(EIGEN_FLAG)
-  target_link_libraries(sgemm_silicon_cpu PUBLIC matmul matmul_eigen ${MATMUL_LIBS} ${FRAMEWORK_ACCELERATE})
-else()
-  target_link_libraries(sgemm_silicon_cpu PUBLIC matmul ${MATMUL_LIBS} ${FRAMEWORK_ACCELERATE})
+  set(SGEMM_LIBRARIES ${SGEMM_LIBRARIES} matmul_eigen)
 endif()
+if(MLX_FLAG)
+  set(SGEMM_LIBRARIES ${SGEMM_LIBRARIES} matmul_mlx)
+endif()
+target_link_libraries(sgemm_silicon_cpu PUBLIC ${SGEMM_LIBRARIES})
 set_target_properties(sgemm_silicon_cpu PROPERTIES LINKER_LANGUAGE C)
 if(OPENMP_FLAG)
   target_link_options(sgemm_silicon_cpu PRIVATE ${OpenMP_LINK_FLAG})

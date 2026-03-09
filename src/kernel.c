@@ -386,36 +386,36 @@ void kernel_blocked_simd(float* panelA_packed,
         a1 = vld1q_f32(panelA_packed + ir * KC + p * MR + 4);
         
         b = vld1q_dup_f32(panelB_packed + jr * KC + p * NR + 0);
-        C_accum[0][0] = vfmaq_f32(a0, b, C_accum[0][0]);
-        C_accum[0][1] = vfmaq_f32(a1, b, C_accum[0][1]);
+        C_accum[0][0] = vfmaq_f32(C_accum[0][0], a0, b);
+        C_accum[0][1] = vfmaq_f32(C_accum[0][1], a1, b);
 
         b = vld1q_dup_f32(panelB_packed + jr * KC + p * NR + 1);
-        C_accum[1][0] = vfmaq_f32(a0, b, C_accum[1][0]);
-        C_accum[1][1] = vfmaq_f32(a1, b, C_accum[1][1]);
+        C_accum[1][0] = vfmaq_f32(C_accum[1][0], a0, b);
+        C_accum[1][1] = vfmaq_f32(C_accum[1][1], a1, b);
 
         b = vld1q_dup_f32(panelB_packed + jr * KC + p * NR + 2);
-        C_accum[2][0] = vfmaq_f32(a0, b, C_accum[2][0]);
-        C_accum[2][1] = vfmaq_f32(a1, b, C_accum[2][1]);
+        C_accum[2][0] = vfmaq_f32(C_accum[2][0], a0, b);
+        C_accum[2][1] = vfmaq_f32(C_accum[2][1], a1, b);
 
         b = vld1q_dup_f32(panelB_packed + jr * KC + p * NR + 3);
-        C_accum[3][0] = vfmaq_f32(a0, b, C_accum[3][0]);
-        C_accum[3][1] = vfmaq_f32(a1, b, C_accum[3][1]);
+        C_accum[3][0] = vfmaq_f32(C_accum[3][0], a0, b);
+        C_accum[3][1] = vfmaq_f32(C_accum[3][1], a1, b);
 
         b = vld1q_dup_f32(panelB_packed + jr * KC + p * NR + 4);
-        C_accum[4][0] = vfmaq_f32(a0, b, C_accum[4][0]);
-        C_accum[4][1] = vfmaq_f32(a1, b, C_accum[4][1]);
+        C_accum[4][0] = vfmaq_f32(C_accum[4][0], a0, b);
+        C_accum[4][1] = vfmaq_f32(C_accum[4][1], a1, b);
 
         b = vld1q_dup_f32(panelB_packed + jr * KC + p * NR + 5);
-        C_accum[5][0] = vfmaq_f32(a0, b, C_accum[5][0]);
-        C_accum[5][1] = vfmaq_f32(a1, b, C_accum[5][1]);
+        C_accum[5][0] = vfmaq_f32(C_accum[5][0], a0, b);
+        C_accum[5][1] = vfmaq_f32(C_accum[5][1], a1, b);
 
         b = vld1q_dup_f32(panelB_packed + jr * KC + p * NR + 6);
-        C_accum[6][0] = vfmaq_f32(a0, b, C_accum[6][0]);
-        C_accum[6][1] = vfmaq_f32(a1, b, C_accum[6][1]);
+        C_accum[6][0] = vfmaq_f32(C_accum[6][0], a0, b);
+        C_accum[6][1] = vfmaq_f32(C_accum[6][1], a1, b);
 
         b = vld1q_dup_f32(panelB_packed + jr * KC + p * NR + 7);
-        C_accum[7][0] = vfmaq_f32(a0, b, C_accum[7][0]);
-        C_accum[7][1] = vfmaq_f32(a1, b, C_accum[7][1]);
+        C_accum[7][0] = vfmaq_f32(C_accum[7][0], a0, b);
+        C_accum[7][1] = vfmaq_f32(C_accum[7][1], a1, b);
     }
 
     // Write accumulator back out of vectorized registers

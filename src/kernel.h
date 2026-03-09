@@ -24,6 +24,12 @@
 #define NC 400
 #define KC 1000
 
+#define MR_BLIS 32
+#define NR_BLIS 16
+#define MC_BLIS 512
+#define NC_BLIS 512
+#define KC_BLIS 1024
+
 void kernel_no_blocking(float* A_tilde,
                         float* B_tilde,
                         float* C_tilde,

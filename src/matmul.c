@@ -121,19 +121,94 @@ PRAGMA_OMP_PARALLEL_FOR
     }
 }
 
-void matmul_naive(float* A, float* B, float* C, int m, int n, int k) {
+void matmul_naive(float* A, float* B, float* C, int M, int N, int K) {
 PRAGMA_OMP_PARALLEL_FOR
-    for (int i = 0; i < m; i++) {
-        for (int j = 0; j < n; j++) {
+    for (int i = 0; i < M; i++) {
+        for (int j = 0; j < N; j++) {
             float accumulator = 0;
-            for (int p = 0; p < k; p++) {
-                accumulator += A[p * m + i] * B[j * k + p];
+            for (int p = 0; p < K; p++) {
+                accumulator += A[p * M + i] * B[j * K + p];
             }
-            C[j * m + i] = accumulator;
+            C[j * M + i] = accumulator;
         }
     }
 }
 
-void matmul_accelerate(float* A, float* B, float* C, int m, int n, int k) {
-    cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, m, n, k, 1., A, m, B, k, 0., C, m);
+void matmul_accelerate(float* A, float* B, float* C, int M, int N, int K) {
+    cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, M, N, K, 1., A, M, B, K, 0., C, M);
+}
+
+void matmul_blis(float* A, float* B, float* C, const int M, const int N, const int K) {
+    // Execute the 5-level loop outlined in the BLIS paper
+    #pragma omp parallel for num_threads(OMP_NTHREADS)
+    for (int jc = 0; jc < N; jc += NC_BLIS) {
+        // Pre-allocated panelA and panelB
+        float panelA[MC_BLIS * KC_BLIS] __attribute__((aligned(64))) = {};
+        float panelB[NC_BLIS * KC_BLIS] __attribute__((aligned(64))) = {};
+        // Pre-allocate accumulated a and b
+        float a, b;
+        int nc = min(NC_BLIS, N - jc);
+        for (int pc = 0; pc < K; pc += KC_BLIS) {
+            int kc = min(KC_BLIS, K - pc);
+            // Pack a column-major "panel" of a kc x nc submatrix of B
+            for (int j = 0; j < nc; j += NR_BLIS) {
+                int nr_actual = min(NR_BLIS, nc - j);
+                for (int p = 0; p < kc; p++) {
+                    for (int k = 0; k < nr_actual; k++) {
+                        *(panelB + j * kc + p * NR_BLIS + k) = *(B + jc * K + pc + (j + k) * K + p);
+                    }
+                    for (int k = nr_actual; k < NR_BLIS; k++) {
+                        *(panelB + j * kc + p * NR_BLIS + k) = 0;
+                    }
+                }
+            }
+            for (int ic = 0; ic < M; ic += MC_BLIS) {
+                int mc = min(MC_BLIS, M - ic);
+                // Pack a row-major "panel" of a mc by kc submatrix of A
+                for (int i = 0; i < mc; i += MR_BLIS) {
+                    int mr_actual = min(MR_BLIS, mc - i);
+                    for (int p = 0; p < kc; p++) {
+                        for (int k = 0; k < mr_actual; k++) {
+                            *(panelA + i * kc + p * MR_BLIS + k) = *(A + pc * M + ic + p * M + (i + k));
+                        }
+                        for (int k = mr_actual; k < MR_BLIS; k++) {
+                            *(panelA + i * kc + p * MR_BLIS + k) = 0.0;
+                        }
+                    }
+                }
+                for (int jr = 0; jr < nc; jr += NR_BLIS) {
+                    int nr = min(NR_BLIS, nc - jr);
+                    for (int ir = 0; ir < mc; ir += MR_BLIS) {
+                        int mr = min(MR_BLIS, mc - ir);
+                        // printf("i = %d, j = %d, ir = %d, jr = %d, mc = %d, nc = %d, mr = %d, nr = %d\n", i, j, ir, jr, mc, nc, mr, nr);
+                        // Load existing output into auxiliary accumulator
+                        float C_aux[NR_BLIS * MR_BLIS] = {};
+                        for (int j = 0; j < nr; j++) {
+                            for (int i = 0; i < mr; i++) {
+                                C_aux[j*MR_BLIS + i] = C[(jc + jr + j) * M + ic + ir + i];
+                            }
+                        }
+                        
+                        // Accumulate result
+                        for (int p = 0; p < kc; p++) {
+                            for (int i = 0; i < nr; i++) {
+                                b = *(panelB + jr * kc + p * NR_BLIS + i);
+                                for (int j = 0; j < mr; j++) {
+                                    a = *(panelA + ir * kc + p * MR_BLIS + j);
+                                    C_aux[i*MR_BLIS + j] += a * b;
+                                }
+                            }
+                        }
+
+                        // Save accumulated data back to output matrix
+                        for (int j = 0; j < nr; j++) {
+                            for (int i = 0; i < mr; i++) {
+                                C[(jc + jr + j) * M + ic + ir + i] = C_aux[j*MR_BLIS + i];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

@@ -50,9 +50,9 @@ We use a similar trick as we used for openmp to detect eigen headers at build ti
 With cmake (and ideally openMP) installed, you can build the CPU-based program matrix multiplication program by running
 
 ```
-rm -rf build             
+rm -rf build
 mkdir build
-cmake -S . -B build -DOPENMP_FLAG=ON -DDEBUG_FLAG=OFF -DUNITTEST_FLAG=OFF -DASAN_FLAG=OFF -DEIGEN_FLAG=ON -DOMP_NTHREADS=k
+cmake -S . -B build -DOPENMP_FLAG=ON -DDEBUG_FLAG=OFF -DUNITTEST_FLAG=OFF -DASAN_FLAG=OFF -DEIGEN_FLAG=ON -DMLX_FLAG=ON -DOMP_NTHREADS=k
 cmake --build build
 ```
 
