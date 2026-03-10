@@ -50,9 +50,9 @@ We use a similar trick as we used for openmp to detect eigen headers at build ti
 With cmake (and ideally openMP) installed, you can build the CPU-based program matrix multiplication program by running
 
 ```
-rm -rf build             
+rm -rf build
 mkdir build
-cmake -S . -B build -DOPENMP_FLAG=ON -DDEBUG_FLAG=OFF -DUNITTEST_FLAG=OFF -DASAN_FLAG=OFF -DEIGEN_FLAG=ON -DOMP_NTHREADS=k
+cmake -S . -B build -DOPENMP_FLAG=ON -DDEBUG_FLAG=OFF -DUNITTEST_FLAG=OFF -DASAN_FLAG=OFF -DEIGEN_FLAG=ON -DMLX_FLAG=ON -DOMP_NTHREADS=k
 cmake --build build
 ```
 
@@ -64,9 +64,9 @@ Then you can run the program with `./build/sgemm_silicon_cpu`.
 To generate an Xcode project based on the build targets and specifications defined in a `CMakeLists.txt`, navigate to the main project folder (i.e. `cd /path/to/sgemm_silicon`) and run the following commands (replacing `k` with the desired number of threads you'd like openMP to use):
 
 ```{bash}
-rm -rf xcode/            
+rm -rf xcode/
 mkdir xcode
-cd xcode                                                                               
+cd xcode
 cmake -G Xcode .. -DCMAKE_C_COMPILER=cc -DCMAKE_CXX_COMPILER=c++ -DOPENMP_FLAG=ON -DDEBUG_FLAG=OFF -DEIGEN_FLAG=ON -DOMP_NTHREADS=k
 cd ..
 ```
